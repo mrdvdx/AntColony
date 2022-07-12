@@ -1,12 +1,12 @@
 let home, food;
 const ants = [];
-const antsNumber = 300;
+const antsNumber = 350;
 
 const homeMap = new Map();
 const foodMap = new Map();
 
-const homePheromonesMaxForce = 40;
-const foodPheromonesMaxForce = 40;
+const homePheromonesMaxForce = 50;
+const foodPheromonesMaxForce = 50;
 
 const freshRate = 10;
 
@@ -15,8 +15,10 @@ const showHomePheromones = false;
 
 let img;
 function preload() {
-    img = loadImage("../world-states.png");
-    //   img = loadImage('../assets/labirynt.png');
+    img = loadImage("../assets/world-states.png");
+    // img = loadImage("../assets/Baltic sea.png");
+    // img = loadImage("../assets/Mediterranean sea.png");
+    // img = loadImage("../assets/Labirynt.png");
 }
 
 function setup() {
@@ -28,8 +30,10 @@ function setup() {
     home = new Place(50, 50, `rgb(0, 0, 255)`, "home");
     food = new Place(200, 50, `rgb(0, 255, 0)`, "food");
 
-    for (let i = 0; i < antsNumber; i++)
-        ants[i] = new Ant(i, home.position.x, home.position.y, 0, 2, 130, 1.5);
+    for (let i = 0; i < antsNumber; i++) {
+        const angle = map(i, 0, antsNumber, 0, 360);
+        ants[i] = new Ant(i, home.position.x, home.position.y, 0, 2, angle, 1.5);
+    }
 
     frameRate(120);
 }
@@ -60,17 +64,10 @@ function mouseClicked() {
         home.position.y = mouseY;
         homeMap.clear();
         ants.length = 0;
-        for (let i = 0; i < antsNumber; i++)
-            ants[i] = new Ant(
-                i,
-                home.position.x,
-                home.position.y,
-                0,
-                2,
-                0,
-                1.5
-            );
-
+        for (let i = 0; i < antsNumber; i++) {
+            const angle = map(i, 0, antsNumber, 0, 360);
+            ants[i] = new Ant(i, home.position.x, home.position.y, 0, 2, angle, 1.5);
+        }
         for (const ant of ants) ant.homePheromonesForce = 0;
     }
 }
@@ -112,33 +109,17 @@ function draw() {
 
         if (ant.homePheromonesForce > 0 && frameCount % freshRate == 0) {
             const positionString = ant.generateMapKey(ant.position);
-            if (
-                !homeMap.has(positionString) ||
-                homeMap.get(positionString).force < ant.homePheromonesForce
-            )
+            if (!homeMap.has(positionString) || homeMap.get(positionString).force < ant.homePheromonesForce)
                 homeMap.set(positionString, ant.placePheromone("home"));
         }
 
         if (ant.foodPheromonesForce > 0 && frameCount % freshRate == 0) {
             const positionString = ant.generateMapKey(ant.position);
-            if (
-                !foodMap.has(positionString) ||
-                foodMap.get(positionString).force < ant.foodPheromonesForce
-            )
+            if (!foodMap.has(positionString) || foodMap.get(positionString).force < ant.foodPheromonesForce)
                 foodMap.set(positionString, ant.placePheromone("food"));
         }
 
-        if (
-            ant.hasFood &&
-            Math.floor(ant.id / (antsNumber / freshRate)) ==
-                frameCount % freshRate
-        )
-            ant.searchForPheromones("home", home);
-        if (
-            !ant.hasFood &&
-            Math.floor(ant.id / (antsNumber / freshRate)) ==
-                frameCount % freshRate
-        )
-            ant.searchForPheromones("food", food);
+        if (ant.hasFood && Math.floor(ant.id / (antsNumber / freshRate)) == frameCount % freshRate) ant.searchForPheromones("home", home);
+        if (!ant.hasFood && Math.floor(ant.id / (antsNumber / freshRate)) == frameCount % freshRate) ant.searchForPheromones("food", food);
     }
 }
